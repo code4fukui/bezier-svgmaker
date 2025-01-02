@@ -24,13 +24,13 @@ const createSVG = (tag) => {
 };
 
 let r = 8;
-let cp;
+let cp; // control points
 let bez;
 let line;
 
 onload = function() {
   const svg = createSVG("svg");
-  svg.id = 'svg';
+  svg.id = "svg";
   svg.setAttribute("width", "500");
   svg.setAttribute("height", "500");
   
@@ -70,7 +70,7 @@ onload = function() {
   svg.onmousedown = function(e) {
     const mx = e.offsetX;
     const my = e.offsetY;
-//    $('debug').textContent = mx + "x" + my + " click";
+//    $("debug").textContent = mx + "x" + my + " click";
     const c = getHit(cp, mx, my);
     if (c != null) {
       this.current = c;
@@ -83,10 +83,10 @@ onload = function() {
   svg.onmousemove = function(e) {
     const mx = e.offsetX;
     const my = e.offsetY;
-//    $('debug').textContent = e.x + "x" + e.y;
+//    $("debug").textContent = e.x + "x" + e.y;
     if (this.current == null) {
       const c = getHit(cp, mx, my);
-      svg.style.cursor = c != null ? 'pointer' : 'default';
+      svg.style.cursor = c != null ? "pointer" : "default";
     } else {
       const dx = mx - this.mdx;
       const dy = my - this.mdy;
@@ -121,18 +121,18 @@ onload = function() {
   
   bez.draw = function() {
     const s = [];
-    s.push('M');
+    s.push("M");
     s.push(cp[0].getX());
-    s.push(',');
+    s.push(",");
     s.push(cp[0].getY());
     s.push(" C");
     for (let i = 1; i < 4; i++) {
       s.push(cp[i].getX());
-      s.push(',');
+      s.push(",");
       s.push(cp[i].getY());
-      s.push(' ');
+      s.push(" ");
     }
-    const d = s.join('');
+    const d = s.join("");
     this.setAttribute("d", d);
     
     drawLine(line[0], cp[0], cp[1]);
@@ -153,15 +153,15 @@ const getHit = (cp, x, y) => {
 };
 const drawLine = (path, c1, c2) => {
   const s = [];
-  s.push('M');
+  s.push("M");
   s.push(c1.getX());
-  s.push(',');
+  s.push(",");
   s.push(c1.getY());
   s.push(" L");
   s.push(c2.getX());
-  s.push(',');
+  s.push(",");
   s.push(c2.getY());
-  path.setAttribute("d", s.join(''));
+  path.setAttribute("d", s.join(""));
 };
 
 </script>
@@ -177,13 +177,13 @@ body {
 </head>
 <body>
 
-<div id='main'></div>
+<div id="main"></div>
 
-<div id='credit'>
-<img id='help'>
-<a href='http://fukuno.jig.jp/2012/'>(c)taisukef CED</a>
+<div id="credit">
+<img id="help">
+<a href="http://fukuno.jig.jp/2012/">(c)taisukef CED</a>
 </div>
-<div id='helptips'><div id='helptipscontent'>
+<div id="helptips"><div id="helptipscontent">
 ベジェ曲線の実験１<br>
 <br>
 拡大縮小しても滑らかに見える文字、これはベジェ曲線というもので描かれています。ベジェ曲線は視点と終点の他に、２点の制御点というものを使って、線の曲がり具合をコントロールしています。４つの点をいろいろ動かしてみてください。<br>
@@ -192,7 +192,7 @@ body {
 「<a href=http://ja.wikipedia.org/wiki/%E3%83%99%E3%82%B8%E3%82%A7%E6%9B%B2%E7%B7%9A target=_blank>ベジェ曲線 - Wikipedia</a>」
 </div></div>
 
-<div id='debug'></div>
+<div id="debug"></div>
 
 </body>
 </html>
