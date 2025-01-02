@@ -1,13 +1,7 @@
-
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset='utf-8'/>
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><link rel="icon" href="data:">
 <title>bezier1</title>
-<meta property="og:image" content="http://fukuno.jig.jp/2012/bezier1.png">
-<script src='util.js'></script>
-<script src='help.js'></script>
-<script>
+
+<script type="module">
 
 /*
 小文字で相対位置
@@ -25,28 +19,26 @@ S x1 y1 x y	現在点から指定された座標 (x,y) まで3次ベジェ曲線
 
 */
 
-createSVG = function(tag) {
+const createSVG = (tag) => {
 	return document.createElementNS("http://www.w3.org/2000/svg", "svg:" + tag);
-}
+};
 
-var r = 8;
-var cp;
-var bez;
-var line;
+let r = 8;
+let cp;
+let bez;
+let line;
 
 onload = function() {
-	makeHelp();
-	
-	var svg = createSVG("svg");
+	const svg = createSVG("svg");
 	svg.id = 'svg';
 	svg.setAttribute("width", "500");
 	svg.setAttribute("height", "500");
 	
-	var p = [ 100, 400, 100, 100, 400, 100, 400, 400 ];
+	const p = [ 100, 400, 100, 100, 400, 100, 400, 400 ];
 	
 	cp = [];
-	for (var i = 0; i < 4; i++) {
-		var c = createSVG("circle");
+	for (let i = 0; i < 4; i++) {
+		const c = createSVG("circle");
 		c.setX = function(x) {
 			this.posx = x;
 			this.setAttribute("cx", x);
@@ -62,8 +54,8 @@ onload = function() {
 			return this.posy;
 		}
 		c.contains = function(px, py) {
-			var dx = this.posx - px;
-			var dy = this.posy - py;
+			const dx = this.posx - px;
+			const dy = this.posy - py;
 			return dx * dx + dy * dy < r * r;
 		};
 		c.setX(p[i * 2]);
@@ -76,10 +68,10 @@ onload = function() {
 	}
 	
 	svg.onmousedown = function(e) {
-		var mx = e.offsetX;
-		var my = e.offsetY;
+		const mx = e.offsetX;
+		const my = e.offsetY;
 //		$('debug').textContent = mx + "x" + my + " click";
-		var c = getHit(cp, mx, my);
+		const c = getHit(cp, mx, my);
 		if (c != null) {
 			this.current = c;
 			this.orgx = c.getX();
@@ -89,15 +81,15 @@ onload = function() {
 		}
 	};
 	svg.onmousemove = function(e) {
-		var mx = e.offsetX;
-		var my = e.offsetY;
+		const mx = e.offsetX;
+		const my = e.offsetY;
 //		$('debug').textContent = e.x + "x" + e.y;
 		if (this.current == null) {
-			var c = getHit(cp, mx, my);
-			$('svg').style.cursor = c != null ? 'pointer' : 'default';
+			const c = getHit(cp, mx, my);
+			svg.style.cursor = c != null ? 'pointer' : 'default';
 		} else {
-			var dx = mx - this.mdx;
-			var dy = my - this.mdy;
+			const dx = mx - this.mdx;
+			const dy = my - this.mdy;
 			this.current.setX(this.orgx + dx);
 			this.current.setY(this.orgy + dy);
 			bez.draw();
@@ -109,7 +101,7 @@ onload = function() {
 		}
 	};
 	
-	var b = createSVG("path");
+	const b = createSVG("path");
 //	b.setAttribute("d", "M300,300 C300,400 400,400 400,300");
 	b.setAttribute("stroke-width", "2px");
 	b.setAttribute("fill", "none");
@@ -118,8 +110,8 @@ onload = function() {
 	bez = b;
 	
 	line = [];
-	for (var i = 0; i < 2; i++) {
-		var b = createSVG("path");
+	for (let i = 0; i < 2; i++) {
+		const b = createSVG("path");
 		b.setAttribute("stroke-width", "1px");
 		b.setAttribute("fill", "none");
 		b.setAttribute("stroke", "#000000");
@@ -128,19 +120,19 @@ onload = function() {
 	}
 	
 	bez.draw = function() {
-		var s = [];
+		const s = [];
 		s.push('M');
 		s.push(cp[0].getX());
 		s.push(',');
 		s.push(cp[0].getY());
 		s.push(" C");
-		for (var i = 1; i < 4; i++) {
+		for (let i = 1; i < 4; i++) {
 			s.push(cp[i].getX());
 			s.push(',');
 			s.push(cp[i].getY());
 			s.push(' ');
 		}
-		var d = s.join('');
+		const d = s.join('');
 		this.setAttribute("d", d);
 		
 		drawLine(line[0], cp[0], cp[1]);
@@ -148,19 +140,19 @@ onload = function() {
 	};
 	bez.draw();
 	
-	$('main').appendChild(svg);
+	main.appendChild(svg);
 };
-getHit = function(cp, x, y) {
-	var c = null;
-	for (var i = 0; i < cp.length; i++) {
+const getHit = (cp, x, y) => {
+	let c = null;
+	for (let i = 0; i < cp.length; i++) {
 		if (cp[i].contains(x, y)) {
 			return cp[i];
 		}
 	}
 	return null;
 };
-drawLine = function(path, c1, c2) {
-	var s = [];
+const drawLine = (path, c1, c2) => {
+	const s = [];
 	s.push('M');
 	s.push(c1.getX());
 	s.push(',');
@@ -173,9 +165,9 @@ drawLine = function(path, c1, c2) {
 };
 
 </script>
-<link rel='stylesheet' type='text/css' href='base.css'/>
 <style>
 body {
+	font-family: sans-serif;
 	text-align: center;
 }
 #svg {
