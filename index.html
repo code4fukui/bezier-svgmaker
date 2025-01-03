@@ -1,5 +1,16 @@
 <!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><link rel="icon" href="data:">
-<title>bezier1</title>
+<title>bezier svgmaker</title>
+</head>
+<body>
+<h1>bezier svgmaker</h1>
+
+<div id="main"></div>
+stroke-width <input type="number" value=2 id=inswidth>
+<input type="color" value="#ff0000" id=incolor>
+<button id=btnremove>remove point</button>
+<button id=btnvisible>toggle control point</button>
+
+<textarea id=ta></textarea>
 
 <script type="module">
 
@@ -16,76 +27,124 @@ T x y  現在点から指定された座標 (x,y) まで2次ベジェ曲線を�
 A rx ry x-axis-rotation large-arc-flag sweep-flag x y  現在の点から指定された座標 (x,y) まで楕円形の曲線を引く。楕円は2つの半径 (rx,ry) と軸の回転 (x-axis-rotation) によって定義される。large-arc-flagとsweep-flagは楕円の描き方を指す。
 C x1 y1 x2 y2 x y  現在点から指定された座標 (x,y) まで3次ベジェ曲線を引く。(x1,y1) は曲線の開始点の制御点で、(x2,y2) は曲線の終点の制御点を示す。
 S x1 y1 x y  現在点から指定された座標 (x,y) まで3次ベジェ曲線を引く。開始点の制御点は、直前に引かれた曲線の終点を指し、(x1,y1) は終点の制御点を示す。
-
 */
 
 const createSVG = (tag) => {
   return document.createElementNS("http://www.w3.org/2000/svg", "svg:" + tag);
 };
 
-let r = 8;
-let cp; // control points
+const cp = []; // control points
+const getHit = (x, y) => {
+  let c = null;
+  for (let i = 0; i < cp.length; i++) {
+    if (cp[i].contains(x, y)) {
+      return cp[i];
+    }
+  }
+  return null;
+};
+const createControlPoint = (x, y, r = 8) => {
+  const c = createSVG("circle");
+  c.setX = function(x) {
+    this.posx = x;
+    this.setAttribute("cx", x);
+  };
+  c.getX = function() {
+    return this.posx;
+  }
+  c.getPos = function() {
+    return this.posx + " " + this.posy;
+  };
+  c.setY = function(y) {
+    this.posy = y;
+    this.setAttribute("cy", y);
+  };
+  c.getY = function() {
+    return this.posy;
+  }
+  c.contains = function(px, py) {
+    const dx = this.posx - px;
+    const dy = this.posy - py;
+    return dx * dx + dy * dy < r * r;
+  };
+  c.setX(x);
+  c.setY(y);
+  c.setAttribute("r", r);
+  c.setAttribute("fill", "none");
+  c.setAttribute("stroke", "#000000");
+  return c;
+};
+
+const lines = [];
+const createLine = (c1, c2) => {
+  const b = createSVG("path");
+  b.setAttribute("stroke-width", "1px");
+  b.setAttribute("fill", "none");
+  b.setAttribute("stroke", "#000000");
+
+  b.update = () => {
+    b.setAttribute("d", `M${c1.getPos()}L${c2.getPos()}`);
+  };
+  b.update();
+  return b;
+};
+
 let bez;
-let line;
 
 onload = function() {
   const svg = createSVG("svg");
   svg.id = "svg";
-  svg.setAttribute("width", "500");
-  svg.setAttribute("height", "500");
-  
-  const p = [ 100, 400, 100, 100, 400, 100, 400, 400 ];
-  
-  cp = [];
-  for (let i = 0; i < 4; i++) {
-    const c = createSVG("circle");
-    c.setX = function(x) {
-      this.posx = x;
-      this.setAttribute("cx", x);
-    };
-    c.getX = function() {
-      return this.posx;
-    }
-    c.setY = function(y) {
-      this.posy = y;
-      this.setAttribute("cy", y);
-    };
-    c.getY = function() {
-      return this.posy;
-    }
-    c.contains = function(px, py) {
-      const dx = this.posx - px;
-      const dy = this.posy - py;
-      return dx * dx + dy * dy < r * r;
-    };
-    c.setX(p[i * 2]);
-    c.setY(p[i * 2 + 1]);
-    c.setAttribute("r", r);
-    c.setAttribute("fill", "none");
-    c.setAttribute("stroke", "#000000");
+  svg.setAttribute("width", "500px");
+  svg.setAttribute("height", "500px");
+
+  bez = createSVG("path");
+  svg.appendChild(bez);
+
+  //const p = [100, 400, 100, 100, 400, 100, 400, 400, 300, 400, 300, 300, 250, 200, 200, 200];
+  const p = [100, 400, 100, 100, 400, 100, 400, 400]; //, 300, 400, 300, 300, 250, 200, 200, 200];
+  for (let i = 0; i < p.length; i += 2) {
+    const c = createControlPoint(p[i], p[i + 1]);
     svg.appendChild(c);
     cp.push(c);
+  }
+  for (let i = 0; i < cp.length; i += 2) {
+    const b = createLine(cp[i], cp[i + 1]);
+    svg.appendChild(b);
+    lines.push(b);
   }
   
   svg.onmousedown = function(e) {
     const mx = e.offsetX;
     const my = e.offsetY;
-//    $("debug").textContent = mx + "x" + my + " click";
-    const c = getHit(cp, mx, my);
+    const c = getHit(mx, my);
     if (c != null) {
       this.current = c;
       this.orgx = c.getX();
       this.orgy = c.getY();
       this.mdx = mx;
       this.mdy = my;
+    } else {
+      setVisible(true);
+      const cl = cp[cp.length - 1];
+      const cx = (cl.getX() + mx) / 2;
+      const cy = (cl.getY() + my) / 2;
+      const c0 = createControlPoint(cx, cy);
+      svg.appendChild(c0);
+      cp.push(c0);
+      const c = createControlPoint(mx, my);
+      svg.appendChild(c);
+      cp.push(c);
+      const line = createLine(c0, c);
+      svg.appendChild(line);
+      lines.push(line);
+      bez.draw();
     }
   };
   svg.onmousemove = function(e) {
     const mx = e.offsetX;
     const my = e.offsetY;
-//    $("debug").textContent = e.x + "x" + e.y;
     if (this.current == null) {
-      const c = getHit(cp, mx, my);
+      const c = getHit(mx, my);
       svg.style.cursor = c != null ? "pointer" : "default";
     } else {
       const dx = mx - this.mdx;
@@ -100,71 +159,70 @@ onload = function() {
       this.current = null;
     }
   };
-  
-  const b = createSVG("path");
-//  b.setAttribute("d", "M300,300 C300,400 400,400 400,300");
-  b.setAttribute("stroke-width", "2px");
-  b.setAttribute("fill", "none");
-  b.setAttribute("stroke", "#ff0000");
-  svg.appendChild(b);
-  bez = b;
-  
-  line = [];
-  for (let i = 0; i < 2; i++) {
-    const b = createSVG("path");
-    b.setAttribute("stroke-width", "1px");
-    b.setAttribute("fill", "none");
-    b.setAttribute("stroke", "#000000");
-    svg.appendChild(b);
-    line.push(b);
-  }
-  
+      
   bez.draw = function() {
+    this.setAttribute("stroke-width", inswidth.value + "px");
+    this.setAttribute("fill", "none");
+    this.setAttribute("stroke", incolor.value);
+    this.setAttribute("stroke-linecap", "round");
+
     const s = [];
     s.push("M");
-    s.push(cp[0].getX());
-    s.push(",");
-    s.push(cp[0].getY());
-    s.push(" C");
+    s.push(cp[0].getPos());
+    s.push("C");
     for (let i = 1; i < 4; i++) {
-      s.push(cp[i].getX());
-      s.push(",");
-      s.push(cp[i].getY());
-      s.push(" ");
+      s.push(cp[i].getPos());
+      if (i < 3) s.push(" ");
     }
-    const d = s.join("");
-    this.setAttribute("d", d);
+    for (let i = 4; i < cp.length; i += 2) {
+      s.push("S");
+      s.push(cp[i].getPos());
+      s.push(" ");
+      s.push(cp[i + 1].getPos());
+    }
+    this.setAttribute("d", s.join(""));
     
-    drawLine(line[0], cp[0], cp[1]);
-    drawLine(line[1], cp[2], cp[3]);
+    lines.forEach(i => i.update());
+
+    const ats = ["stroke-width", "fill", "stroke", "stroke-linecap", "d"];
+    const svgpre = `<svg xmlns="http://www.w3.org/2000/svg" width="${svg.getAttribute("width")}" height="${svg.getAttribute("height")}">\n`;
+    ta.value = `${svgpre}<path ${ats.map(i => i + '="' + this.getAttribute(i) + '"').join(" ")}>\n</svg>`;
   };
   bez.draw();
   
   main.appendChild(svg);
-};
-const getHit = (cp, x, y) => {
-  let c = null;
-  for (let i = 0; i < cp.length; i++) {
-    if (cp[i].contains(x, y)) {
-      return cp[i];
+
+  let vflg = true;
+  const setVisible = (b) => {
+    if (vflg == b) return;
+    vflg = b;
+    if (vflg) {
+      cp.forEach(i => svg.appendChild(i));
+      lines.forEach(i  => svg.appendChild(i));
+    } else {
+      cp.forEach(i => svg.removeChild(i));
+      lines.forEach(i  => svg.removeChild(i));
     }
-  }
-  return null;
-};
-const drawLine = (path, c1, c2) => {
-  const s = [];
-  s.push("M");
-  s.push(c1.getX());
-  s.push(",");
-  s.push(c1.getY());
-  s.push(" L");
-  s.push(c2.getX());
-  s.push(",");
-  s.push(c2.getY());
-  path.setAttribute("d", s.join(""));
+  };
+
+  btnremove.onclick = () => {
+    setVisible(true);
+    if (cp.length > 4) {
+      svg.removeChild(cp.pop());
+      svg.removeChild(cp.pop());
+      svg.removeChild(lines.pop());
+      bez.draw();
+    }
+  };
+  btnvisible.onclick = () => {
+    setVisible(!vflg);
+  };
+
+  inswidth.oninput = incolor.oninput = () => bez.draw();
 };
 
 </script>
+
 <style>
 body {
   font-family: sans-serif;
@@ -173,26 +231,19 @@ body {
 #svg {
   border: 1px solid black;
 }
+#inswidth {
+  width: 4em;
+}
+textarea {
+  margin: 1em;
+  width: 80vw;
+  height: 7em;
+}
 </style>
-</head>
-<body>
 
-<div id="main"></div>
-
-<div id="credit">
-<img id="help">
-<a href="http://fukuno.jig.jp/2012/">(c)taisukef CED</a>
-</div>
-<div id="helptips"><div id="helptipscontent">
-ベジェ曲線の実験１<br>
-<br>
-拡大縮小しても滑らかに見える文字、これはベジェ曲線というもので描かれています。ベジェ曲線は視点と終点の他に、２点の制御点というものを使って、線の曲がり具合をコントロールしています。４つの点をいろいろ動かしてみてください。<br>
-<br>
-より詳しく知りたい方はこちらへ<br>
-「<a href=http://ja.wikipedia.org/wiki/%E3%83%99%E3%82%B8%E3%82%A7%E6%9B%B2%E7%B7%9A target=_blank>ベジェ曲線 - Wikipedia</a>」
-</div></div>
-
-<div id="debug"></div>
+<hr>
+BaseApp: <a href="https://fukuno.jig.jp/2012029">2012年 一日一創 ベジェ曲線体感１</a><br>
+<a href=https://github.com/code4fukui/bezier-svgmaker/>src on GitHub</a><br>
 
 </body>
 </html>
