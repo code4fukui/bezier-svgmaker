@@ -46,6 +46,22 @@ const getHit = (x, y) => {
   }
   return null;
 };
+const getNearest = (x, y, activeonly = false) => {
+  let len = 50 * 50;
+  let res = null;
+  for (let i = 0; i < cp.length; i++) {
+    const c = cp[i];
+    if (activeonly && !c.active) continue;
+    const dx = c.getX() - x;
+    const dy = c.getY() - y;
+    const l = dx * dx + dy * dy;
+    if (l < len) {
+      len = l;
+      res = c;
+    }
+  }
+  return res;
+};
 const createControlPoint = (x, y, r = controlPointRadius) => {
   const c = createSVG("circle");
   c.setX = function(x) {
@@ -116,14 +132,17 @@ onload = function() {
     lines.push(b);
   }
 
+  const setCurrent = function(c, mx, my) {
+    c.active = true;
+    c.orgx = c.getX();
+    c.orgy = c.getY();
+    c.mdx = mx;
+    c.mdy = my;
+  };
   svg.ondown = function(mx, my) {
     const c = getHit(mx, my);
     if (c != null) {
-      this.current = c;
-      this.orgx = c.getX();
-      this.orgy = c.getY();
-      this.mdx = mx;
-      this.mdy = my;
+      setCurrent(c, mx, my);
     } else {
       setVisible(true);
       const cl = cp[cp.length - 1];
@@ -139,45 +158,54 @@ onload = function() {
       svg.appendChild(line);
       lines.push(line);
       bez.draw();
+      setCurrent(c, mx, my);
     }
   };
   svg.onmove = function(mx, my) {
-    if (this.current == null) {
-      const c = getHit(mx, my);
-      svg.style.cursor = c != null ? "pointer" : "default";
-    } else {
-      const dx = mx - this.mdx;
-      const dy = my - this.mdy;
-      this.current.setX(this.orgx + dx);
-      this.current.setY(this.orgy + dy);
-      bez.draw();
+    const c = getNearest(mx, my, true);
+    if (!c) {
+      svg.style.cursor = getHit(mx, my) ? "pointer" : "default";
+      return;
     }
+    const dx = mx - c.mdx;
+    const dy = my - c.mdy;
+    c.setX(c.orgx + dx);
+    c.setY(c.orgy + dy);
+    bez.draw();
   };
-  svg.onup = function() {
-    if (this.current != null) {
-      this.current = null;
-    }
+  svg.onup = function(mx, my) {
+    const c = getNearest(mx, my);
+    if (c) c.active = false;
   };
 
   //alert(navigator.maxTouchPoints); // 5 on iPhone
   if (isTouchEnabled) {
     svg.ontouchstart = function(e) {
-      const touch = e.touches[0];
-      const rect = this.getBoundingClientRect();
-      const mx = touch.clientX - rect.left;
-      const my = touch.clientY - rect.top;
-      this.ondown(mx, my);
+      for (const touch of e.touches) {
+        const rect = this.getBoundingClientRect();
+        const mx = touch.clientX - rect.left;
+        const my = touch.clientY - rect.top;
+        this.ondown(mx, my);
+      }
+      e.preventDefault();
     };
     svg.addEventListener("touchmove", function(e) {
-      const touch = e.touches[0];
-      const rect = this.getBoundingClientRect();
-      const mx = touch.clientX - rect.left;
-      const my = touch.clientY - rect.top;
-      this.onmove(mx, my);
+      for (const touch of e.touches) {
+        const rect = this.getBoundingClientRect();
+        const mx = touch.clientX - rect.left;
+        const my = touch.clientY - rect.top;
+        this.onmove(mx, my);
+      }
       e.preventDefault();
     });
     svg.addEventListener("touchend", function(e) {
-      this.onup();
+      for (const touch of e.touches) {
+        const rect = this.getBoundingClientRect();
+        const mx = touch.clientX - rect.left;
+        const my = touch.clientY - rect.top;
+        this.onup(mx, my);
+      }
+      e.preventDefault();
     });
   } else {
     svg.onmousedown = function(e) {
@@ -191,7 +219,9 @@ onload = function() {
       this.onmove(mx, my);
     };
     svg.onmouseup = function(e) {
-      this.onup();
+      const mx = e.offsetX;
+      const my = e.offsetY;
+      this.onup(mx, my);
     };
   }
 
