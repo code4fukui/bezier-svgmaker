@@ -1,5 +1,7 @@
 # bezier-svgmaker
 
+> 日本語のREADMEはこちらです: [README.ja.md](README.ja.md)
+
 A simple web application for creating SVG graphics using Bézier curves.
 
 ## Demo
