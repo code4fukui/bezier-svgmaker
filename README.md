@@ -27,4 +27,4 @@ This project runs in the browser and has no external dependencies.
 7. The generated SVG code will be displayed in the textarea.
 
 ## License
-This project is licensed under the [MIT License](LICENSE).
+MIT License — see [LICENSE](LICENSE).
