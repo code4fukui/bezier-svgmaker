@@ -5,7 +5,7 @@
 A simple web application for creating SVG graphics using Bézier curves.
 
 ## Demo
-The project is hosted at [https://taisukefukuno.github.io/bezier-svgmaker/](https://taisukefukuno.github.io/bezier-svgmaker/).
+The project is hosted at ~~https://taisukefukuno.github.io/bezier-svgmaker/~~ *(unavailable)* *(demo unavailable)*.
 
 ## Features
 - Create and manipulate Bézier curves by adding and dragging control points
@@ -18,7 +18,7 @@ The project is hosted at [https://taisukefukuno.github.io/bezier-svgmaker/](http
 This project runs in the browser and has no external dependencies.
 
 ## Usage
-1. Open the [demo page](https://taisukefukuno.github.io/bezier-svgmaker/) in a web browser.
+1. Open the demo page *(demo unavailable)* in a web browser.
 2. Add control points by clicking on the canvas.
 3. Drag the control points to adjust the Bézier curve.
 4. Use the input fields to change the stroke width and color.
